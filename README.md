@@ -1,11 +1,11 @@
 # CSV to Rasa YAML Converter
 
-Converts csv containing responses and corresponding intents into Rasa compatible yaml file for nlu training.
+Converts CSV containing responses and corresponding intents into Rasa compatible YAML file for NLU training.
 
 ## Installation
 Activate your virtual environment and run:
 ```
-pip install requirements
+pip install -r requirements.txt
 ```
 
 ## Usage
