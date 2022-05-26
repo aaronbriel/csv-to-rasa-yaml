@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from tkinter import E
 import click
 import pandas as pd
 
