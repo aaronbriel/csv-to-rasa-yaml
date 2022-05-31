@@ -49,7 +49,7 @@ def convert(csv_path: str,
     yaml_file = open(yaml_path, "w")
     df = pd.read_csv(csv_path) 
             
-    yaml_file.write(f"version: {rasa_version}\n")  
+    yaml_file.write(f"version: \"{rasa_version}\"\n") 
     yaml_file.write(f"nlu:\n")    
     
     intents = df[intent_column].unique().tolist()
