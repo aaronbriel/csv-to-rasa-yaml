@@ -56,26 +56,33 @@ class Converter(object):
         self.export_dir = export_dir
         self.output_file_name = output_file_name
 
-    def convert_csv_to_yaml(self):
+    def convert_csv_to_yaml(self, rasa_version:str = "3.0"):
         """ Converts CSV to Rasa compatible YAML
+        
+        Args:
+            rasa_version (str): Rasa version
         """
         yaml_path = os.path.join(self.export_dir, self.output_file_name)
-        yaml_file = open(yaml_path, "w")
         df = pd.read_csv(self.file_path) 
-                
-        yaml_file.write(f"version: \"{self.rasa_version}\"\n") 
-        yaml_file.write(f"nlu:\n")    
-        
+        nlu = []
+
         intents = df[self.intent_column].unique().tolist()
         for intent in intents:
-            yaml_file.write(f"  - intent: {intent}\n")
-            yaml_file.write("    examples: >-\n")
+            sample = {}
+            sample['intent'] = intent
             intent_texts = df[
                 df[self.intent_column] == intent][self.text_column].tolist()
-            for text in intent_texts:
-                yaml_file.write(f"     - {text}\n")
 
-        yaml_file.close()
+            sample['examples'] = intent_texts
+            nlu.append(sample)
+
+        yaml_dict = {
+            'version': rasa_version,
+            'nlu': nlu
+        }   
+        
+        with open(yaml_path, 'w') as f:
+            data = yaml.dump(yaml_dict, f, sort_keys=False) 
         
     def convert_yaml_to_csv(self):
         """ Converts Rasa intent YAML to CSV
