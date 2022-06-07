@@ -18,8 +18,7 @@ import os
 
 import click
 import pandas as pd
-import yaml
-
+import ruamel.yaml
 
 class Converter(object):
     """ Converts a CSV containing texts and corresponding intents into a Rasa 
@@ -55,6 +54,9 @@ class Converter(object):
         self.rasa_version = rasa_version
         self.export_dir = export_dir
         self.output_file_name = output_file_name
+        self.yaml = ruamel.yaml.YAML()
+        # Set to ensure Rasa indentation formatting compliance
+        self.yaml.indent(mapping=2, sequence=4, offset=2)
 
     def convert_csv_to_yaml(self, rasa_version:str = "3.0"):
         """ Converts CSV to Rasa compatible YAML
@@ -62,6 +64,7 @@ class Converter(object):
         Args:
             rasa_version (str): Rasa version
         """
+        literal = ruamel.yaml.scalarstring.LiteralScalarString
         yaml_path = os.path.join(self.export_dir, self.output_file_name)
         df = pd.read_csv(self.file_path) 
         nlu = []
@@ -73,22 +76,28 @@ class Converter(object):
             intent_texts = df[
                 df[self.intent_column] == intent][self.text_column].tolist()
 
-            sample['examples'] = intent_texts
+            # Workaround that allows for injection of scalar literal '|'
+            intent_texts_str = ''
+            for text in intent_texts:
+                intent_texts_str += f'- {text}\n'
+
+            # Injection of scalar literal to ensure Rasa formatting compliance
+            sample['examples'] = literal(intent_texts_str)
             nlu.append(sample)
 
         yaml_dict = {
             'version': rasa_version,
             'nlu': nlu
         }   
-        
+
         with open(yaml_path, 'w') as f:
-            data = yaml.dump(yaml_dict, f, sort_keys=False) 
+            self.yaml.dump(yaml_dict, f)
         
     def convert_yaml_to_csv(self):
         """ Converts Rasa intent YAML to CSV
         """
         with open(self.file_path) as file:
-            documents = yaml.full_load(file)['nlu']
+            documents = self.yaml.load(file)['nlu']
 
         csv_file_path = os.path.join(self.export_dir, self.output_file_name)
         with open(csv_file_path, 'w') as csv_file:
